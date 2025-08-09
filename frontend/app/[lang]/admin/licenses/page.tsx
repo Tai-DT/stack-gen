@@ -1,47 +1,71 @@
-"use client";
+'use client';
 
-import { useState, FormEvent } from "react";
-import { getDictionary, type Locale } from "../../../../lib/i18n";
+import { useEffect, useState, FormEvent } from 'react';
+import { getDictionary, locales, type Locale } from '../../../../lib/i18n';
 
-interface TextFields {
-  en: string;
-  ja: string;
-  vi: string;
-  ko: string;
+interface License {
+  id: number;
+  title: Record<string, string>;
+  issuer: string;
+  year: number;
 }
 
 export default function AdminLicensesPage({ params }: { params: { lang: Locale } }) {
   const dict = getDictionary(params.lang);
-  const [title, setTitle] = useState<TextFields>({ en: "", ja: "", vi: "", ko: "" });
-  const [issuer, setIssuer] = useState("");
-  const [year, setYear] = useState("");
+  const empty = { title: Object.fromEntries(locales.map(l => [l, ''])), issuer: '', year: new Date().getFullYear() };
+  const [licenses, setLicenses] = useState<License[]>([]);
+  const [form, setForm] = useState(empty);
 
-  async function submit(e: FormEvent) {
+  useEffect(() => {
+    fetch('http://localhost:8080/api/licenses').then(r => r.json()).then(setLicenses);
+  }, []);
+
+  function handleTitleChange(l: string, value: string) {
+    setForm(prev => ({ ...prev, title: { ...prev.title, [l]: value } }));
+  }
+
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    await fetch("http://localhost:8080/api/admin/licenses", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title, issuer, year: parseInt(year, 10) }),
+    await fetch('http://localhost:8080/api/admin/licenses', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(form),
     });
-    setTitle({ en: "", ja: "", vi: "", ko: "" });
-    setIssuer("");
-    setYear("");
+    const list = await fetch('http://localhost:8080/api/licenses').then(r => r.json());
+    setLicenses(list);
+    setForm(empty);
   }
 
   return (
     <div>
       <h1>{dict.adminLicenses}</h1>
-      <form onSubmit={submit}>
-        <h2>Title</h2>
-        <input placeholder="EN" value={title.en} onChange={(e) => setTitle({ ...title, en: e.target.value })} />
-        <input placeholder="JA" value={title.ja} onChange={(e) => setTitle({ ...title, ja: e.target.value })} />
-        <input placeholder="VI" value={title.vi} onChange={(e) => setTitle({ ...title, vi: e.target.value })} />
-        <input placeholder="KO" value={title.ko} onChange={(e) => setTitle({ ...title, ko: e.target.value })} />
-        <h2>Issuer</h2>
-        <input value={issuer} onChange={(e) => setIssuer(e.target.value)} />
-        <h2>Year</h2>
-        <input type="number" value={year} onChange={(e) => setYear(e.target.value)} />
-        <button type="submit">Save</button>
+      <ul>
+        {licenses.map(l => (
+          <li key={l.id}>{l.title[params.lang]} - {l.issuer} ({l.year})</li>
+        ))}
+      </ul>
+      <form onSubmit={handleSubmit}>
+        {locales.map(l => (
+          <div key={l}>
+            <input
+              placeholder={`Title (${l})`}
+              value={form.title[l]}
+              onChange={e => handleTitleChange(l, e.target.value)}
+            />
+          </div>
+        ))}
+        <input
+          placeholder="Issuer"
+          value={form.issuer}
+          onChange={e => setForm(prev => ({ ...prev, issuer: e.target.value }))}
+        />
+        <input
+          type="number"
+          placeholder="Year"
+          value={form.year}
+          onChange={e => setForm(prev => ({ ...prev, year: Number(e.target.value) }))}
+        />
+        <button type="submit">Add</button>
       </form>
     </div>
   );

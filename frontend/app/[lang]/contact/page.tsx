@@ -1,15 +1,13 @@
 import { getDictionary, type Locale } from "../../../lib/i18n";
 
-interface Contact {
-  email: string;
-  phone: string;
-  address: string;
+async function getContact() {
+  const res = await fetch("http://localhost:8080/api/contact", { cache: "no-store" });
+  return res.json();
 }
 
 export default async function ContactPage({ params }: { params: { lang: Locale } }) {
   const dict = getDictionary(params.lang);
-  const res = await fetch("http://localhost:8080/api/contact", { cache: "no-store" });
-  const contact: Contact = await res.json();
+  const contact = await getContact();
   return (
     <div>
       <h1>{dict.contact}</h1>

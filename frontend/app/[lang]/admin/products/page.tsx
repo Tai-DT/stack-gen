@@ -1,46 +1,64 @@
-"use client";
+'use client';
 
-import { useState, FormEvent } from "react";
-import { getDictionary, type Locale } from "../../../../lib/i18n";
+import { useEffect, useState, FormEvent } from 'react';
+import { getDictionary, locales, type Locale } from '../../../../lib/i18n';
 
-interface TextFields {
-  en: string;
-  ja: string;
-  vi: string;
-  ko: string;
+interface Product {
+  id: number;
+  name: Record<string, string>;
+  description: Record<string, string>;
 }
 
 export default function AdminProductsPage({ params }: { params: { lang: Locale } }) {
   const dict = getDictionary(params.lang);
-  const [name, setName] = useState<TextFields>({ en: "", ja: "", vi: "", ko: "" });
-  const [description, setDescription] = useState<TextFields>({ en: "", ja: "", vi: "", ko: "" });
+  const empty = { name: Object.fromEntries(locales.map(l => [l, ''])), description: Object.fromEntries(locales.map(l => [l, ''])) };
+  const [products, setProducts] = useState<Product[]>([]);
+  const [form, setForm] = useState(empty);
 
-  async function submit(e: FormEvent) {
+  useEffect(() => {
+    fetch('http://localhost:8080/api/products').then(r => r.json()).then(setProducts);
+  }, []);
+
+  function handleChange(l: string, field: 'name' | 'description', value: string) {
+    setForm(prev => ({ ...prev, [field]: { ...prev[field], [l]: value } }));
+  }
+
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    await fetch("http://localhost:8080/api/admin/products", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, description }),
+    await fetch('http://localhost:8080/api/admin/products', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(form),
     });
-    setName({ en: "", ja: "", vi: "", ko: "" });
-    setDescription({ en: "", ja: "", vi: "", ko: "" });
+    const list = await fetch('http://localhost:8080/api/products').then(r => r.json());
+    setProducts(list);
+    setForm(empty);
   }
 
   return (
     <div>
       <h1>{dict.adminProducts}</h1>
-      <form onSubmit={submit}>
-        <h2>Name</h2>
-        <input placeholder="EN" value={name.en} onChange={(e) => setName({ ...name, en: e.target.value })} />
-        <input placeholder="JA" value={name.ja} onChange={(e) => setName({ ...name, ja: e.target.value })} />
-        <input placeholder="VI" value={name.vi} onChange={(e) => setName({ ...name, vi: e.target.value })} />
-        <input placeholder="KO" value={name.ko} onChange={(e) => setName({ ...name, ko: e.target.value })} />
-        <h2>Description</h2>
-        <textarea placeholder="EN" value={description.en} onChange={(e) => setDescription({ ...description, en: e.target.value })} />
-        <textarea placeholder="JA" value={description.ja} onChange={(e) => setDescription({ ...description, ja: e.target.value })} />
-        <textarea placeholder="VI" value={description.vi} onChange={(e) => setDescription({ ...description, vi: e.target.value })} />
-        <textarea placeholder="KO" value={description.ko} onChange={(e) => setDescription({ ...description, ko: e.target.value })} />
-        <button type="submit">Save</button>
+      <ul>
+        {products.map(p => (
+          <li key={p.id}>{p.name[params.lang]}</li>
+        ))}
+      </ul>
+      <form onSubmit={handleSubmit}>
+        {locales.map(l => (
+          <div key={l}>
+            <input
+              placeholder={`Name (${l})`}
+              value={form.name[l]}
+              onChange={e => handleChange(l, 'name', e.target.value)}
+            />
+            <textarea
+              placeholder={`Description (${l})`}
+              value={form.description[l]}
+              onChange={e => handleChange(l, 'description', e.target.value)}
+            />
+          </div>
+        ))}
+        <button type="submit">Add</button>
       </form>
     </div>
   );
