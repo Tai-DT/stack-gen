@@ -27,6 +27,12 @@ cd backend
 go run .
 ```
 
+Chạy kiểm thử cho backend:
+
+```bash
+go test ./...
+```
+
 ### Frontend
 
 ```bash
