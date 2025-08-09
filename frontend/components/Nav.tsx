@@ -1,13 +1,19 @@
 import Link from "next/link";
 
-export default function Nav() {
+interface Props {
+  dict: Record<string, string>;
+  lang: string;
+}
+
+export default function Nav({ dict, lang }: Props) {
   return (
     <nav>
-      <Link href="/">Home</Link> |{" "}
-      <Link href="/products">Products</Link> |{" "}
-      <Link href="/projects">Projects</Link> |{" "}
-      <Link href="/licenses">Licenses</Link> |{" "}
-      <Link href="/contact">Contact</Link>
+      <Link href={`/${lang}`}>{dict.home}</Link> |{" "}
+      <Link href={`/${lang}/products`}>{dict.products}</Link> |{" "}
+      <Link href={`/${lang}/projects`}>{dict.projects}</Link> |{" "}
+      <Link href={`/${lang}/licenses`}>{dict.licenses}</Link> |{" "}
+      <Link href={`/${lang}/contact`}>{dict.contact}</Link> |{" "}
+      <Link href={`/${lang}/admin/products`}>{dict.admin}</Link>
     </nav>
   );
 }
