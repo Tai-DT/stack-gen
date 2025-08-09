@@ -5,7 +5,7 @@ Xây dựng trang web cho công ty stack-gen với backend Go và frontend Next.
 ## Cấu trúc
 
 - `backend`: dịch vụ HTTP với Go phục vụ các API:
-  - Public: `/api/hello`, `/api/products`, `/api/projects`, `/api/licenses`, `/api/contact`
+  - Public: `/api/hello`, `/api/products`, `/api/projects`, `/api/licenses`, `/api/contact` (GET/PUT)
   - Admin: `/api/admin/products`, `/api/admin/projects`, `/api/admin/licenses`
 - `frontend`: ứng dụng Next.js 15 (TypeScript) hỗ trợ đa ngôn ngữ với các đường dẫn dạng `/:lang/...` (`en`, `ja`, `vi`, `ko`):
   - `/:lang` (giới thiệu)
@@ -14,6 +14,9 @@ Xây dựng trang web cho công ty stack-gen với backend Go và frontend Next.
   - `/:lang/licenses`
   - `/:lang/contact`
   - `/:lang/admin/products`
+  - `/:lang/admin/projects`
+  - `/:lang/admin/licenses`
+  - `/:lang/admin/contact`
 
 ## Chạy dự án
 
